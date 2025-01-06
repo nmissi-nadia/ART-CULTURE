@@ -184,98 +184,225 @@ class User {
         $this->derniereConnexion = $derniereConnexion;
     }
 
-    public function seConnecter(): bool {
-        // Implémentation de la connexion
-        return true;
+    public function seConnecter(PDO $pdo, string $email, string $motDePasse): bool {
+        try {
+            $stmt = $pdo->prepare('SELECT * FROM utilisateurs WHERE email = ?');
+            $stmt->execute([$email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+            if ($user && password_verify($motDePasse, $user['mot_de_passe'])) {
+                $this->id_user = $user['id_user'];
+                $this->nom = $user['nom'];
+                $this->email = $user['email'];
+                $this->motDePasse = $user['mot_de_passe'];
+                $this->role = $user['role_id'];
+                $this->photoProfil = $user['photo_profil'];
+                $this->bio = $user['bio'];
+                $this->dateInscription = new DateTime($user['date_inscription']);
+                $this->derniereConnexion = new DateTime($user['derniere_connexion']);
+    
+                // Mettre à jour la dernière connexion
+                $stmt = $pdo->prepare('UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id_user = ?');
+                $stmt->execute([$this->id_user]);
+    
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la connexion: ' . $e->getMessage());
+        }
     }
 
-    public function mettreAJourProfil(): void {
-        // Implémentation de la mise à jour du profil
+    public function mettreAJourProfil(PDO $pdo): void {
+        try {
+            $stmt = $pdo->prepare('UPDATE utilisateurs SET nom = ?, email = ?, mot_de_passe = ?, photo_profil = ?, bio = ? WHERE id_user = ?');
+            $stmt->execute([$this->nom, $this->email, $this->motDePasse, $this->photoProfil, $this->bio, $this->id_user]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la mise à jour du profil: ' . $e->getMessage());
+        }
     }
 }
 
 // Classe Utilisateur héritée de User
 class Utilisateur extends User {
-    public function afficherArticles(): void {
-        // Implémentation pour afficher les articles
+    public function afficherArticles(PDO $pdo): array {
+        try {
+            $stmt = $pdo->prepare('SELECT * FROM articles WHERE auteur_id = ?');
+            $stmt->execute([$this->id_user]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de l\'affichage des articles: ' . $e->getMessage());
+        }
     }
 
-    public function filtrerArticles(): void {
-        // Implémentation pour filtrer les articles
+    public function filtrerArticles(PDO $pdo, string $critere): array {
+        try {
+            $stmt = $pdo->prepare('SELECT * FROM articles WHERE titre LIKE ? AND auteur_id = ?');
+            $stmt->execute(['%' . $critere . '%', $this->id_user]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors du filtrage des articles: ' . $e->getMessage());
+        }
     }
 
-    public function sInscrire(): void {
-        // Implémentation de l'inscription
-
-        
+    public function sInscrire(PDO $pdo): bool {
+        try {
+            $stmt = $pdo->prepare('INSERT INTO utilisateurs (nom, email, mot_de_passe, role_id, photo_profil, bio, date_inscription, derniere_connexion) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())');
+            return $stmt->execute([$this->nom, $this->email, $this->motDePasse, $this->role, $this->photoProfil, $this->bio]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de l\'inscription: ' . $e->getMessage());
+        }
     }
 }
 
 // Classe Administrateur héritée de User
 class Administrateur extends User {
-    public function creeCategories(): void {
-        // Implémentation de la création de catégories
+    public function creeCategories(PDO $pdo, string $nom, string $description_cat): bool {
+        try {
+            $stmt = $pdo->prepare('INSERT INTO categories (nom, id_admin, description_cat, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())');
+            return $stmt->execute([$nom, $this->id_user, $description_cat]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la création de la catégorie: ' . $e->getMessage());
+        }
     }
 
-    public function modifierCategories(): void {
-        // Implémentation de la modification de catégories
+    public function modifierCategories(PDO $pdo, int $categorieId, string $nom, string $description_cat): bool {
+        try {
+            $stmt = $pdo->prepare('UPDATE categories SET nom = ?, description_cat = ?, updated_at = NOW() WHERE id = ?');
+            return $stmt->execute([$nom, $description_cat, $categorieId]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la modification de la catégorie: ' . $e->getMessage());
+        }
     }
 
-    public function supprimerCategories(): void {
-        // Implémentation de la suppression de catégories
+    public function supprimerCategories(PDO $pdo, int $categorieId): bool {
+        try {
+            $stmt = $pdo->prepare('DELETE FROM categories WHERE id = ?');
+            return $stmt->execute([$categorieId]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la suppression de la catégorie: ' . $e->getMessage());
+        }
     }
 
-    public function creeTags(): void {
-        // Implémentation de la création de tags
+    public function creeTags(PDO $pdo, string $nom): bool {
+        try {
+            $stmt = $pdo->prepare('INSERT INTO tags (nom) VALUES (?)');
+            return $stmt->execute([$nom]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la création du tag: ' . $e->getMessage());
+        }
     }
 
-    public function modifierTags(): void {
-        // Implémentation de la modification de tags
+    public function modifierTags(PDO $pdo, int $tagId, string $nom): bool {
+        try {
+            $stmt = $pdo->prepare('UPDATE tags SET nom = ? WHERE id = ?');
+            return $stmt->execute([$nom, $tagId]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la modification du tag: ' . $e->getMessage());
+        }
     }
 
-    public function supprimerTags(): void {
-        // Implémentation de la suppression de tags
+    public function supprimerTags(PDO $pdo, int $tagId): bool {
+        try {
+            $stmt = $pdo->prepare('DELETE FROM tags WHERE id = ?');
+            return $stmt->execute([$tagId]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la suppression du tag: ' . $e->getMessage());
+        }
     }
 
-    public function consulterProfils(): void {
-        // Implémentation de la consultation des profils
+    public function consulterProfils(PDO $pdo): array {
+        try {
+            $stmt = $pdo->prepare('SELECT * FROM utilisateurs');
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la consultation des profils: ' . $e->getMessage());
+        }
     }
 
-    public function validerArticles(int $articleId): bool {
-        // Implémentation de la validation d'un article
-        return true;
+    public function validerArticles(PDO $pdo, int $articleId): bool {
+        try {
+            $stmt = $pdo->prepare('UPDATE articles SET status = "valide" WHERE id_article = ?');
+            return $stmt->execute([$articleId]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la validation de l\'article: ' . $e->getMessage());
+        }
     }
 
-    public function rejeterArticle(int $articleId): bool {
-        // Implémentation du rejet d'un article
-        return false;
+    public function rejeterArticle(PDO $pdo, int $articleId): bool {
+        try {
+            $stmt = $pdo->prepare('UPDATE articles SET status = "rejete" WHERE id_article = ?');
+            return $stmt->execute([$articleId]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors du rejet de l\'article: ' . $e->getMessage());
+        }
     }
 
-    public function bannirUtilisateur(int $userId): bool {
-        // Implémentation du bannissement d'un utilisateur
-        return true;
+    public function bannirUtilisateur(PDO $pdo, int $userId): bool {
+        try {
+            $stmt = $pdo->prepare('UPDATE utilisateurs SET status = "banni" WHERE id_user = ?');
+            return $stmt->execute([$userId]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors du bannissement de l\'utilisateur: ' . $e->getMessage());
+        }
     }
 
-    public function supprimerCommentaire(int $commentaireId): bool {
-        // Implémentation de la suppression d'un commentaire
-        return true;
+    public function supprimerCommentaire(PDO $pdo, int $commentaireId): bool {
+        try {
+            $stmt = $pdo->prepare('DELETE FROM commentaires WHERE id = ?');
+            return $stmt->execute([$commentaireId]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la suppression du commentaire: ' . $e->getMessage());
+        }
     }
 }
 
 // Classe Auteur héritée de User
 class Auteur extends Utilisateur {
-    public function creerArticle(string $titre, string $contenu, int $categorieId, array $tags, string $image): bool {
-        // Implémentation de la création d'un article
-        return true;
+    public function creerArticle(PDO $pdo, string $titre, string $contenu, string $image_couverture, int $categorie_id): bool {
+        try {
+            $stmt = $pdo->prepare('INSERT INTO articles (titre, contenu, image_couverture, auteur_id, categorie_id, date_creation, date_modification) VALUES (?, ?, ?, ?, ?, NOW(), NOW())');
+            return $stmt->execute([$titre, $contenu, $image_couverture, $this->id_user, $categorie_id]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la publication de l\'article: ' . $e->getMessage());
+        }
     }
 
-    public function modifierArticle(int $articleId, string $titre, string $contenu, int $categorieId, array $tags, string $image): bool {
-        // Implémentation de la modification d'un article
-        return true;
+    public function modifierArticle(PDO $pdo, int $articleId, string $titre, string $contenu, int $categorieId, array $tags, string $image): bool {
+        try {
+            $pdo->beginTransaction();
+
+            // Mettre à jour l'article
+            $stmt = $pdo->prepare('UPDATE articles SET titre = ?, contenu = ?, categorie_id = ?, image_couverture = ?, date_modification = NOW() WHERE id_article = ?');
+            $stmt->execute([$titre, $contenu, $categorieId, $image, $articleId]);
+
+            // Supprimer les tags existants
+            $stmt = $pdo->prepare('DELETE FROM article_tags WHERE article_id = ?');
+            $stmt->execute([$articleId]);
+
+            // Ajouter les nouveaux tags
+            foreach ($tags as $tagId) {
+                $stmt = $pdo->prepare('INSERT INTO article_tags (article_id, tag_id) VALUES (?, ?)');
+                $stmt->execute([$articleId, $tagId]);
+            }
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw new Exception('Erreur lors de la modification de l\'article: ' . $e->getMessage());
+        }
     }
 
-    public function supprimerArticle(int $articleId): void {
-        // Implémentation de la suppression d'un article
+    public function supprimerArticle(PDO $pdo, int $articleId): bool {
+        try {
+            $stmt = $pdo->prepare('DELETE FROM articles WHERE id_article = ?');
+            return $stmt->execute([$articleId]);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la suppression de l\'article: ' . $e->getMessage());
+        }
     }
 }
 
