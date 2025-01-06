@@ -1,7 +1,7 @@
 <?php
 // Paramètres de connexion
 $host = 'localhost';
-$dbname = 'art_culture';
+$dbname = 'art_culture_v2';
 $username = 'root';
 $password = '';
 

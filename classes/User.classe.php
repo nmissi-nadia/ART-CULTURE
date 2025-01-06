@@ -206,6 +206,8 @@ class Utilisateur extends User {
 
     public function sInscrire(): void {
         // Implémentation de l'inscription
+
+        
     }
 }
 

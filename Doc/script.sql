@@ -1,12 +1,6 @@
--- Suppression des tables si elles existent déjà
-DROP TABLE IF EXISTS articles;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS utilisateurs;
-DROP TABLE IF EXISTS roles;
-
--- Creation de base de donnees
-create database art_culture;
-use art_culture;
+-- Création de la base de données
+CREATE DATABASE art_culture_v2;
+USE art_culture_v2;
 
 -- Table des rôles
 CREATE TABLE roles (
@@ -46,17 +40,52 @@ CREATE TABLE articles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     titre VARCHAR(150) NOT NULL,
     contenu TEXT NOT NULL,
-    image_couverture VARCHAR(255),
+    image_couverture VARCHAR(255) NOT NULL,
     auteur_id INT NOT NULL,
     categorie_id INT NOT NULL,
     status ENUM('en_attente', 'publie', 'rejete') DEFAULT 'en_attente',
     date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     date_modification TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     vues INT DEFAULT 0,
-    FOREIGN KEY (auteur_id) REFERENCES utilisateurs(id) ON DELETE CASCADE,
+    FOREIGN KEY (auteur_id) REFERENCES utilisateurs(id_user) ON DELETE CASCADE,
     FOREIGN KEY (categorie_id) REFERENCES categories(id)
 );
 
+-- Table des tags
+CREATE TABLE tags (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nom VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Table de liaison entre articles et tags
+CREATE TABLE tags_articles (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    article_id INT NOT NULL,
+    tag_id INT NOT NULL,
+    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(id)
+);
+
+-- Table des commentaires
+CREATE TABLE commentaires (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    article_id INT NOT NULL,
+    utilisateur_id INT NOT NULL,
+    contenu TEXT NOT NULL,
+    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE,
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id_user)
+);
+
+-- Table des favoris
+CREATE TABLE favoris (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    utilisateur_id INT NOT NULL,
+    article_id INT NOT NULL,
+    date_ajout TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id_user) ON DELETE CASCADE,
+    FOREIGN KEY (article_id) REFERENCES articles(id) ON DELETE CASCADE
+);
 -- Insertions des rôles de base
 INSERT INTO roles (nom) VALUES 
 ('admin'),
@@ -64,89 +93,147 @@ INSERT INTO roles (nom) VALUES
 ('utilisateur');
 
 -- Insertions des catégories initiales
-INSERT INTO categories (nom, description) VALUES 
-('Peinture',1, 'Articles sur la peinture, les techniques et les artistes'),
-('Musique',1, 'Actualités musicales, critiques et découvertes'),
-('Littérature',1, 'Romans, poésie et analyses littéraires'),
-('Cinéma',1, 'Critiques de films et actualités du 7e art'),
-('Photographie',1, 'Art photographique et techniques'),
-('Théâtre',1, 'Actualités théâtrales et critiques de pièces'),
-('Architecture',1, 'Design et histoire architecturale');
+
+INSERT INTO categories (nom, id_admin, description_cat) VALUES 
+('Peinture', 1, 'Articles sur la peinture, les techniques et les artistes'),
+('Musique', 1, 'Actualités musicales, critiques et découvertes'),
+('Littérature', 1, 'Romans, poésie et analyses littéraires'),
+('Cinéma', 1, 'Critiques de films et actualités du 7e art'),
+('Photographie', 1, 'Art photographique et techniques'),
+('Théâtre', 1, 'Actualités théâtrales et critiques de pièces'),
+('Architecture', 1, 'Design et histoire architecturale');
 
 -- Création d'un administrateur par défaut (mot de passe: Admin123!)
 INSERT INTO utilisateurs (nom, email, mot_de_passe, role_id) VALUES 
 ('Admin', 'admin@artculture.fr', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1);
 
+-- Création de quelques tags
+INSERT INTO tags (nom) VALUES 
+('peinture'),
+('musique'),
+('littérature'),
+('cinéma'),
+('photographie'),
+('théâtre'),
+('architecture'),
+('histoire'),
+('art moderne'),
+('art contemporain'),
+('art classique'),
+('art abstrait'),
+('art figuratif'),
+('art urbain'),
+('art conceptuel'),
+('art minimaliste'),
+('art cinétique'),
+('art numérique'),
+('art brut'),
+('art naïf'),
+('art singulier'),
+('art premier'),
+('art populaire'),
+('art primitif'),
+('art académique'),
+('art déco'),
+('art nouveau'),
+('art roman'),
+('art gothique'),
+('art baroque'),
+('art rococo'),
+('art classique'),
+('art moderne'),
+('art contemporain'),
+('art urbain'),
+('art conceptuel'),
+('art minimaliste'),
+('art cinétique'),
+('art numérique'),
+('art brut'),
+('art naïf'),
+('art singulier'),
+('art premier'),
+('art populaire'),
+('art primitif'),
+('art académique'),
+('art déco'),
+('art nouveau'),
+('art roman');
+
+-- Création de quelques articles
+
+INSERT INTO articles (titre, contenu, image_couverture, auteur_id, categorie_id) VALUES 
+('Les secrets de la Joconde', 'Découvrez les mystères de la Joconde de Léonard de Vinci.', 'joconde.jpg', 2, 1),
+('Les 10 albums incontournables de 2021', 'Une sélection des meilleurs albums de l''année.', 'albums.jpg', 1, 2),
+('Les grands classiques de la littérature française', 'Découvrez ou redécouvrez les chefs-d''oeuvre de la littérature française.', 'livres.jpg', 2, 3),
+('Les films à ne pas manquer en 2021', 'Les blockbusters et les films indépendants à voir absolument.', 'films.jpg', 5, 4),
+('Les plus belles photos de l''année', 'Une sélection des plus belles photos de l''année.', 'photos.jpg', 5, 5),
+('Les pièces de théâtre à voir en 2021', 'Les pièces classiques et contemporaines à ne pas manquer.', 'theatre.jpg', 6, 6),
+('Les chefs-d''oeuvre de l''architecture moderne', 'Les bâtiments emblématiques de l''architecture moderne.', 'architecture.jpg', 5, 7);
+
+-- Liaison des articles avec des tags
+
+
 -- Création des vues demandées
 
--- Vue des derniers articles (30 derniers jours)
-CREATE VIEW derniers_articles AS
+-- Vue 1: Nombre d'articles par catégorie
+CREATE VIEW articles_par_categorie AS
+SELECT categories.nom AS categorie, COUNT(articles.id) AS nb_articles
+FROM categories
+LEFT JOIN articles ON categories.id = articles.categorie_id
+GROUP BY categories.id;
+
+-- Vue 2: Nombre de commentaires par article
+CREATE VIEW commentaires_par_article AS
+SELECT articles.id AS id_article, articles.titre, COUNT(commentaires.id) AS nb_commentaires
+FROM articles
+LEFT JOIN commentaires ON articles.id = commentaires.article_id
+GROUP BY articles.id;
+
+
+-- Vue 3: Nombre de favoris par article
+CREATE VIEW favoris_par_article AS
+SELECT articles.id AS id_article, articles.titre, COUNT(favoris.id) AS nb_favoris
+FROM articles
+LEFT JOIN favoris ON articles.id = favoris.article_id
+GROUP BY articles.id;
+
+-- Vue 4: Nombre de vues par article
+CREATE VIEW vues_par_article AS
+SELECT articles.id AS id_article, articles.titre, articles.vues
+FROM articles;
+
+
+-- Afficher les articles les plus likés avec leur titre, le nombre de likes, et leur catégorie.
+CREATE VIEW articles_plus_likes AS
 SELECT 
-    a.id,
-    a.titre,
-    a.contenu,
-    a.image_couverture,
-    a.date_creation,
-    u.nom as auteur,
-    c.nom as categorie
+    a.id AS article_id,
+    a.titre AS titre_article,
+    COUNT(f.id) AS nombre_likes,
+    c.nom AS categorie
 FROM articles a
-JOIN utilisateurs u ON a.auteur_id = u.id
+JOIN favoris f ON a.id = f.article_id
 JOIN categories c ON a.categorie_id = c.id
 WHERE a.status = 'publie'
-AND a.date_creation >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
-ORDER BY a.date_creation DESC;
+GROUP BY a.id, a.titre, c.nom
+ORDER BY nombre_likes DESC;
 
--- Vue des statistiques des auteurs
-CREATE VIEW stats_auteurs AS
+-- Création d'une procédure stockée :
+-- Mettre à jour automatiquement le statut is_active d’un utilisateur à 0 (banni) après une action d’administration.
+CREATE PROCEDURE bannir_utilisateur(IN user_id INT)
+BEGIN
+    UPDATE utilisateurs
+    SET status = 'banni'
+    WHERE id_user = user_id;
+END;
+-- Requête SQL :
+-- Identifier les tags les plus associés aux articles publiés au cours des 30 derniers jours, en affichant le nom du tag et le nombre d’associations.
 SELECT 
-    u.id,
-    u.nom,
-    COUNT(a.id) as nombre_articles,
-    SUM(a.vues) as total_vues
-FROM utilisateurs u
-LEFT JOIN articles a ON u.id = a.auteur_id AND a.status = 'publie'
-GROUP BY u.id, u.nom
-ORDER BY nombre_articles DESC;
-
--- Requêtes statistiques demandées
--- 1. Nombre total d'articles par catégorie
-CREATE VIEW articles_par_categorie AS
-SELECT 
-    c.nom as categorie,
-    COUNT(a.id) as nombre_articles
-FROM categories c
-LEFT JOIN articles a ON c.id = a.categorie_id AND a.status = 'publie'
-GROUP BY c.id, c.nom;
-
--- 2. Auteurs les plus actifs
-CREATE VIEW auteurs_actifs AS
-SELECT 
-    u.nom,
-    COUNT(a.id) as nombre_articles,
-    MAX(a.date_creation) as dernier_article
-FROM utilisateurs u
-JOIN articles a ON u.id = a.auteur_id
+    t.nom AS tag,
+    COUNT(ta.tag_id) AS nombre_associations
+FROM tags_articles ta
+JOIN tags t ON ta.tag_id = t.id
+JOIN articles a ON ta.article_id = a.id
 WHERE a.status = 'publie'
-GROUP BY u.id, u.nom
-ORDER BY nombre_articles DESC
-LIMIT 10;
-
--- 3. Moyenne d'articles par catégorie
-CREATE VIEW moyenne_articles_categorie AS
-SELECT 
-    AVG(article_count) as moyenne_articles
-FROM (
-    SELECT categorie_id, COUNT(*) as article_count
-    FROM articles
-    WHERE status = 'publie'
-    GROUP BY categorie_id
-) as counts;
-
--- 4. Catégories sans articles
-CREATE VIEW categories_vides AS
-SELECT 
-    c.nom,
-    c.description
-FROM categories c
-LEFT JOIN articles a ON c.id = a.categorie_id
-WHERE a.id IS NULL;
+AND a.date_creation >= DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY)
+GROUP BY t.nom
+ORDER BY nombre_associations DESC;

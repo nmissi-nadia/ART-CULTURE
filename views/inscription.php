@@ -2,8 +2,6 @@
 
 require_once '../config/db_connect.php'; 
 require_once '../classes/User.classe.php';
-require_once '../classes/Utilisateur.php';
-require_once '../classes/Auteur.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscri'])) {
     
@@ -11,7 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscri'])) {
     $email = htmlspecialchars(trim($_POST['email'] ?? ''));
     $motDePasse = $_POST['password'] ?? '';
     $confirmMotDePasse = $_POST['copass'] ?? '';
-    $role_id = $_POST['role'] ?? ''; // Par défaut, rôle utilisateur
+    $role_id = $_POST['role'] ?? '';
+    $photoProfil = $_FILES['photoProfil'] ?? null;
 
     
     if (empty($nom) || empty($email) || empty($motDePasse) || empty($confirmMotDePasse)) {
@@ -38,9 +37,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscri'])) {
         } else { 
             $user = new Utilisateur($nom, $email, $motDePasse, $role_id);
         }
+
+        if ($photoProfil && $photoProfil['error'] === UPLOAD_ERR_OK) {
+            $photoPath = './uploads/' . basename($photoProfil['name']);
+            move_uploaded_file($photoProfil['tmp_name'], $photoPath);
+            $user->setPhotoProfil($photoPath);
+        }
+
     
         // Utilisation de la méthode sInscrire
         if ($user->sInscrire($pdo)) {
+            // Send welcome email
+            $subject = 'Bienvenue sur L\'Art & La Culture';
+            $message = ($role_id === 2) ? 
+                'Bienvenue, Auteur! Nous vous invitons à publier vos articles.' : 
+                'Bienvenue! Explorez, commentez et ajoutez des articles à vos favoris.';
+            mail($email, $subject, $message);
             echo 'Inscription réussie. Vous pouvez maintenant vous connecter.';
             header("Location:./login.php"); 
         } else {

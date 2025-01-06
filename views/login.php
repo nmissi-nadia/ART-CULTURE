@@ -144,6 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connct'])) {
                         <label class="block text-sm font-medium text-gray-700">Confirmez le mot de passe</label>
                         <input type="password" name="copass" required minlength="8" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
+                    <div class="mb-4">
+                        <label for="photoProfil" class="block text-sm font-medium text-gray-700">Photo de profil</label>
+                        <input type="file" name="photoProfil" id="photoProfil" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
                     <div class="flex items-center">
                         <input type="checkbox" required class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                         <label class="ml-2 block text-sm text-gray-700">
