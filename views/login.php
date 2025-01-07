@@ -26,10 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connct'])) {
             $_SESSION['nom'] = $user->getNom();
             $_SESSION['email'] = $user->getEmail();
             $_SESSION['role_id'] = $user->getRole();
-            $_SESSION['photo_profil'] = $user->getPhotoProfil();
-            $_SESSION['bio'] = $user->getBio();
-            $_SESSION['date_inscription'] = $user->getDateInscription()->format('Y-m-d H:i:s');
-            $_SESSION['derniere_connexion'] = $user->getDerniereConnexion()->format('Y-m-d H:i:s');
+  
 
             echo 'Connexion réussie. Redirection en cours...';
             if ($_SESSION['role_id'] == 1) {

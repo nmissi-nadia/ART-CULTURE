@@ -13,8 +13,6 @@ if (!isset($_SESSION['id_user']) && !isset($_SESSION['role_id'])!==2) {
     exit();
 }
 
-// Inclusion des fichiers nécessaires
-
 
 try {
     // Instancier l'auteur avec les données de la session
@@ -30,6 +28,32 @@ try {
 } catch (PDOException $e) {
     die('Erreur lors de la récupération des articles : ' . $e->getMessage());
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['update'])) {
+        // Modification d'un article existant
+        $article_id = intval($_POST['article_id']);
+        $titre = htmlspecialchars(trim($_POST['titre']));
+        $contenu = htmlspecialchars(trim($_POST['contenu']));
+        $image_couverture = htmlspecialchars(trim($_POST['image_couverture']));
+        $categorie_id = intval($_POST['categorie_id']);
+        $tags = []; // Assuming tags are handled elsewhere
+        try {
+            $auteur->modifierArticle($pdo, $article_id, $titre, $contenu, $categorie_id, $tags, $image_couverture);
+            echo 'Article modifié avec succès.';
+        } catch (Exception $e) {
+            die('Erreur lors de la modification de l\'article : ' . $e->getMessage());
+        }
+    } elseif (isset($_POST['delete'])) {
+        // Suppression d'un article existant
+        $article_id = intval($_POST['article_id']);
+        try {
+            $auteur->supprimerArticle($pdo, $article_id);
+            echo 'Article supprimé avec succès.';
+        } catch (Exception $e) {
+            die('Erreur lors de la suppression de l\'article : ' . $e->getMessage());
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -38,6 +62,8 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Auteur</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 </head>
@@ -200,6 +226,60 @@ try {
         </div>
     </main>
 
+<!-- Modal for editing articles -->
+<div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center" style="display:none;">
+            <div class="bg-white p-6 rounded shadow-lg w-1/2">
+                <h2 class="text-xl font-semibold mb-4">Modifier l'article</h2>
+                <form method="POST" action="">
+                    <input type="hidden" name="article_id" id="editArticleId">
+                    <div class="mb-4">
+                        <label for="editTitre" class="block text-gray-700">Titre</label>
+                        <input type="text" name="titre" id="editTitre" class="w-full px-3 py-2 border rounded" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="editContenu" class="block text-gray-700">Contenu</label>
+                        <textarea name="contenu" id="editContenu" class="w-full px-3 py-2 border rounded" required></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label for="editImage" class="block text-gray-700">URL de l'image de couverture</label>
+                        <input type="text" name="image_couverture" id="editImage" class="w-full px-3 py-2 border rounded" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="editCategorie" class="block text-gray-700">ID de la catégorie</label>
+                        <input type="number" name="categorie_id" id="editCategorie" class="w-full px-3 py-2 border rounded" required>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" name="update" class="bg-blue-500 text-white px-4 py-2 rounded mr-2">Modifier</button>
+                        <button type="button" id="closeModal" class="bg-gray-500 text-white px-4 py-2 rounded">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('.edit-btn').on('click', function() {
+                var id = $(this).data('id');
+                var titre = $(this).data('titre');
+                var contenu = $(this).data('contenu');
+                var image = $(this).data('image');
+                var categorie = $(this).data('categorie');
+
+                $('#editArticleId').val(id);
+                $('#editTitre').val(titre);
+                $('#editContenu').val(contenu);
+                $('#editImage').val(image);
+                $('#editCategorie').val(categorie);
+
+                $('#editModal').show();
+            });
+
+            $('#closeModal').on('click', function() {
+                $('#editModal').hide();
+            });
+        });
+    </script>
     <!-- Pied de page -->
     <footer class="bg-gradient-to-r from-purple-600 to-blue-500 text-white">
         <div class="max-w-7xl mx-auto py-12 px-4">
