@@ -105,7 +105,7 @@ INSERT INTO categories (nom, id_admin, description_cat) VALUES
 
 -- Création d'un administrateur par défaut (mot de passe: Admin123!)
 INSERT INTO utilisateurs (nom, email, mot_de_passe, role_id) VALUES 
-('Admin', 'admin@artculture.fr', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1);
+('Admin', 'admin@artculture.fr', '$2y$10$jC2EIGJmg7FEJLG0DVsihu/6xxhTH11.A0VzznyGHTKYiW5M5g/xG', 1);
 
 -- Création de quelques tags
 INSERT INTO tags (nom) VALUES 

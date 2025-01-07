@@ -3,6 +3,7 @@
 require_once '../config/db_connect.php'; 
 require_once '../classes/User.classe.php';
 
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscri'])) {
     
     $nom = htmlspecialchars(trim($_POST['nom'] ?? ''));
@@ -63,7 +64,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscri'])) {
         die('Une erreur est survenue. Veuillez réessayer plus tard.');
     }
     
-} else {
-    die('Méthode de requête non autorisée.');
-}
+} 
 ?>

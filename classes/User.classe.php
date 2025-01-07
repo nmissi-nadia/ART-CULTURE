@@ -99,17 +99,20 @@ class User {
     protected string $email;
     protected string $motDePasse;
     protected string $role;
-    protected string $photoProfil;
-    protected string $bio;
-    protected DateTime $dateInscription;
-    protected DateTime $derniereConnexion;
+    protected ?string $photoProfil;
+    protected ?string $bio;
+    protected ?DateTime $dateInscription;
+    protected ?DateTime $derniereConnexion;
 
-
-    public function __construct(string $nom, string $email, string $motDePasse, string $role) {
+    public function __construct(string $nom, string $email, string $motDePasse, string $role, ?string $photoProfil = null, ?string $bio = null) {
         $this->nom = $nom;
         $this->email = $email;
         $this->motDePasse = password_hash($motDePasse, PASSWORD_DEFAULT);
         $this->role = $role;
+        $this->photoProfil = $photoProfil;
+        $this->bio = $bio;
+        $this->dateInscription = null;
+        $this->derniereConnexion = null;
     }
     // Getteurs et Setteurs
     public function getIdUser(): int {
@@ -196,10 +199,7 @@ class User {
                 $this->email = $user['email'];
                 $this->motDePasse = $user['mot_de_passe'];
                 $this->role = $user['role_id'];
-                $this->photoProfil = $user['photo_profil'];
-                $this->bio = $user['bio'];
-                $this->dateInscription = new DateTime($user['date_inscription']);
-                $this->derniereConnexion = new DateTime($user['derniere_connexion']);
+                
     
                 // Mettre à jour la dernière connexion
                 $stmt = $pdo->prepare('UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id_user = ?');

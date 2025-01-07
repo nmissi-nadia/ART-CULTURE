@@ -2,37 +2,3 @@
 <head>
     <meta http-equiv="refresh" content="1; url=views/login.php">
 </head>
-
-actor Utilisateur as User
-actor Auteur as Author
-actor Administrateur as Admin
-
-usecase "S'inscrire et Se Connecter" as UC1
-usecase "Mettre à jour le profil" as UC2
-usecase "Rechercher des articles" as UC3
-usecase "Filtrer et paginer les articles" as UC4
-usecase "Commenter des articles" as UC5
-usecase "Aimer et Ajouter aux favoris" as UC6
-usecase "Télécharger des articles en PDF" as UC7
-usecase "Gérer les articles (CRUD)" as UC8
-usecase "Associer des tags à un article" as UC9
-usecase "Valider ou Rejeter les articles" as UC10
-usecase "Gérer les utilisateurs" as UC11
-usecase "Gérer les catégories et tags" as UC12
-usecase "Supprimer des commentaires" as UC13
-
-User --> UC1
-User --> UC2
-User --> UC3
-User --> UC4
-User --> UC5
-User --> UC6
-User --> UC7
-
-Author --> UC8
-Author --> UC9
-
-Admin --> UC10
-Admin --> UC11
-Admin --> UC12
-Admin --> UC13

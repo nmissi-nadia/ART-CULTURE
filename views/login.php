@@ -1,16 +1,15 @@
 <?php
 
-    require_once ("../config/db_connect.php");
-    require_once ("../classes/User.classe.php");
-    require_once ("../classes/Utilisateur.php");
-    require_once ("../classes/Auteur.php");
-    require_once ("../classes/Admin.php");
-    // Vérification que le formulaire a été soumis
+require_once ("../config/db_connect.php");
+require_once ("../classes/User.classe.php");
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connct'])) {
-    // Récupération des données du formulaire
+//   test 
+echo "<script>alert('hello');</script>";
     $email = htmlspecialchars(trim($_POST['email'] ?? ''));
     $motDePasse = $_POST['mot_de_passe'] ?? '';
     session_start();
+    
     // Validation des champs
     if (empty($email) || empty($motDePasse)) {
         die('Tous les champs sont requis.');
@@ -19,23 +18,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connct'])) {
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         die('L\'adresse email n\'est pas valide.');
     }
-    $user = new User('', $email, $motDePasse, 0);
 
     try {
+        $user = new User('', $email, $motDePasse, '');
         if ($user->seConnecter($pdo, $email, $motDePasse)) {
-        
-            echo "<script>console.log('" . $_SESSION['id_user'] . "');</script>";
+            $_SESSION['id_user'] = $user->getIdUser();
+            $_SESSION['nom'] = $user->getNom();
+            $_SESSION['email'] = $user->getEmail();
+            $_SESSION['role_id'] = $user->getRole();
+            $_SESSION['photo_profil'] = $user->getPhotoProfil();
+            $_SESSION['bio'] = $user->getBio();
+            $_SESSION['date_inscription'] = $user->getDateInscription()->format('Y-m-d H:i:s');
+            $_SESSION['derniere_connexion'] = $user->getDerniereConnexion()->format('Y-m-d H:i:s');
+
             echo 'Connexion réussie. Redirection en cours...';
-            if($_SESSION['role_id']==1){
+            if ($_SESSION['role_id'] == 1) {
                 header('Refresh: 2; URL=./admin/dashboard.php');
-            }elseif ($_SESSION['role_id']==2) {
+            } elseif ($_SESSION['role_id'] == 2) {
                 header('Refresh: 2; URL=./auteur/dashboard.php');
-            }else {
-                header('Refresh: 2; URL=./utilisateur/home.php');
+            } else {
+                header('Refresh: 2; URL=./utilisateur/dashboard.php');
             }
-            
-            exit();
         } else {
+            error_log('Email ou mot de passe incorrect.');
             die('Email ou mot de passe incorrect.');
         }
     } catch (Exception $e) {
@@ -43,6 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connct'])) {
         die('Une erreur est survenue. Veuillez réessayer plus tard.');
     }
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
