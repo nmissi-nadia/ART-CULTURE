@@ -5,7 +5,7 @@ require_once ("../classes/User.classe.php");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connct'])) {
 //   test 
-echo "<script>alert('hello');</script>";
+    echo "<script>alert('hello');</script>";
     $email = htmlspecialchars(trim($_POST['email'] ?? ''));
     $motDePasse = $_POST['mot_de_passe'] ?? '';
     session_start();
