@@ -27,7 +27,7 @@ try {
     $article = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$article) {
-        header('Location: home.php');
+        header('Location: ./home.php');
         exit();
     }
 

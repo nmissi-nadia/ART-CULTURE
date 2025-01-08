@@ -208,7 +208,7 @@ class User {
                     $_SESSION['id_user'] = $this->getIdUser();
                     $_SESSION['nom'] = $this->getNom();
                     $_SESSION['email'] = $this->getEmail();
-                    $_SESSION['role'] = $this->getRole();
+                    $_SESSION['role_id'] = $this->getRole();
                     $_SESSION['photo_profil'] = $this->getPhotoProfil();
                     $_SESSION['bio'] = $this->getBio();
                     $_SESSION['date_inscription'] = $this->getDateInscription();

@@ -16,7 +16,7 @@
    
    try {
        // Instancier l'auteur avec les données de la session
-       $auteur = new Auteur($_SESSION['nom'], $_SESSION['email'], '', $_SESSION['role_id']);
+       $auteur = new Auteur($_SESSION['nom'], $_SESSION['email'], '', $_SESSION['role_id'], $_SESSION['photo_profil']);
        $auteur->setIdUser($_SESSION['id_user']);
        $categories = $pdo->query("SELECT id, nom FROM categories")->fetchAll(PDO::FETCH_ASSOC);
    

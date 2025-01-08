@@ -2,23 +2,49 @@
     // Classe Utilisateur héritée de User
 class Utilisateur extends User {
 
-    public function __construct(string $nom, string $email, string $motDePasse, int $role_id, ?string $photoProfil = null, ?string $bio = null) {
-        parent::__construct($nom, $email, $motDePasse, $role_id, $photoProfil, $bio);
-    }
+   
     public function AfficherArticles(PDO $pdo, int $page, int $limit): array {
         $offset = ($page - 1) * $limit;
-        $stmt = $pdo->prepare('SELECT * FROM articles WHERE auteur_id = ? LIMIT ? OFFSET ?');
-        $stmt->bindValue(1, $this->getIdUser(), PDO::PARAM_INT);
-        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
-        $stmt->execute();
-        $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $stmt = $pdo->prepare('SELECT COUNT(*) FROM articles WHERE auteur_id = ?');
-        $stmt->execute([$this->getIdUser()]);
-        $total = $stmt->fetchColumn();
-
-        return ['articles' => $articles, 'total' => $total];
+    
+        try {
+            // Requête SQL pour récupérer les articles paginés
+            $query = "SELECT a.id, a.titre AS title, c.nom AS category, a.contenu AS excerpt, u.nom AS author, 
+                             a.date_creation AS date, a.image_couverture AS image
+                      FROM articles a
+                      JOIN categories c ON a.categorie_id = c.id
+                      JOIN utilisateurs u ON a.auteur_id = u.id_user
+      
+                      ORDER BY a.date_creation DESC
+                      LIMIT :limit OFFSET :offset";
+    
+            $stmt = $pdo->prepare($query);
+            $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+    
+            // Récupérer les articles
+            $articles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+            // Récupérer le nombre total d'articles publiés
+            $totalQuery = "SELECT COUNT(*) AS total FROM articles";
+            $totalStmt = $pdo->query($totalQuery);
+            $total = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+            return [
+                'articles' => $articles,
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit
+            ];
+        } catch (PDOException $e) {
+            error_log("Erreur lors de la récupération des articles : " . $e->getMessage());
+            return [
+                'articles' => [],
+                'total' => 0,
+                'page' => $page,
+                'limit' => $limit
+            ];
+        }
     }
 
     public function filtrerArticles(PDO $pdo, string $critere): array {

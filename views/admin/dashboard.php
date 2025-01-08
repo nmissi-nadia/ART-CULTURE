@@ -1,18 +1,18 @@
 <?php
     require_once ("../../config/db_connect.php");
     require_once ("../../classes/User.classe.php");
-    require_once ("../../classes/Admin.php");
+    require_once ("../../classes/Administrateur.php");
 
 session_start();
 
-if (!isset($_SESSION['id_user']) || $_SESSION['role_id'] !== 1) {
+if (!isset($_SESSION['id_user']) && !isset($_SESSION['role_id'])!==1) { 
     header('Location: ../login.php'); 
     exit();
 }
 try {
     // Instanciation de l'administrateur
-    $admin = new Admin($_SESSION['nom'], $_SESSION['email'], '', $_SESSION['role_id']);
-    $admin->setId($_SESSION['id_user']);
+    $admin = new Administrateur($_SESSION['nom'], $_SESSION['email'], '', $_SESSION['role_id'],'','');
+    $admin->setIdUser($_SESSION['id_user']);
     $utilsRole = $admin->utilisateurpaRole($pdo);
     // $articles = $admin->getArticles($pdo);      
 

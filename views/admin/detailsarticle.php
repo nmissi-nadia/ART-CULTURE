@@ -2,11 +2,11 @@
 session_start();
     require_once ("../../config/db_connect.php");
     require_once ("../../classes/User.classe.php");
-    require_once ("../../classes/Admin.php");
+    require_once ("../../classes/Administrateur.php");
 
     
-    if (!isset($_SESSION['id_user']) || $_SESSION['role_id'] !== 1) {
-        header('Location: ../login.php');
+    if (!isset($_SESSION['id_user']) && !isset($_SESSION['role_id'])!==1) { 
+        header('Location: ../login.php'); 
         exit();
     }
     
@@ -65,7 +65,7 @@ session_start();
         <script src="https://cdn.tailwindcss.com"></script>
     </head>
     <body>
-        <div class="container mx-auto p-4">
+    <div class="container mx-auto p-4 w-1/2 justify-self-center">
             <h1 class="text-2xl font-bold mb-4"><?= htmlspecialchars($article['titre']) ?></h1>
             <img src="<?= htmlspecialchars($article['image_couverture']) ?>" alt="<?= htmlspecialchars($article['titre']) ?>" class="w-full h-64 object-cover rounded-lg mb-4">
             <p class="text-gray-600 mb-4"><?= htmlspecialchars($article['contenu']) ?></p>
@@ -78,9 +78,10 @@ session_start();
                 <button class="px-2 py-1 bg-yellow-600 text-white rounded-lg text-xs hover:bg-yellow-700" onclick="changeStatus(<?= $article['id'] ?>, 'en_attente')">En attente</button>
                 <button class="px-2 py-1 bg-red-600 text-white rounded-lg text-xs hover:bg-red-700" onclick="changeStatus(<?= $article['id'] ?>, 'rejete')">Rejeter</button>
             </div>
-        </div>
-        <div class="mt-22">
-            <a href="./dashboard.php" class="-mt-10 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-blue-700">Retour à la page principale</a>
+    </div>
+    
+        <div class="flex">
+            <a href="./home.php" class="mx-auto px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-blue-700">Retour à la page principale</a>
         </div>
         <script>
         function changeStatus(articleId, status) {
