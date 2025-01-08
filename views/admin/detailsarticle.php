@@ -14,8 +14,24 @@ session_start();
         header('Location: dashboard.php');
         exit();
     }
-    
+
     $articleId = (int)$_GET['id'];
+
+    // Récupérer les commentaires
+    $stmt = $pdo->prepare('SELECT c.*, u.nom AS utilisateur FROM commentaires c JOIN utilisateurs u ON c.utilisateur_id = u.id_user WHERE c.article_id = ? ORDER BY c.date_creation DESC');
+    $stmt->execute([$articleId]);
+    $commentaires = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Handle comment deletion
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_comment'])) {
+        $commentId = intval($_POST['comment_id']);
+        $stmt = $pdo->prepare('DELETE FROM commentaires WHERE id = ?');
+        $stmt->execute([$commentId]);
+        header('Location: detailsarticle.php?id=' . $articleId);
+        exit();
+    }
+    
+    
     
     try {
         // Lire les données de l'article à partir de la base de données
@@ -78,33 +94,26 @@ session_start();
                 <button class="px-2 py-1 bg-yellow-600 text-white rounded-lg text-xs hover:bg-yellow-700" onclick="changeStatus(<?= $article['id'] ?>, 'en_attente')">En attente</button>
                 <button class="px-2 py-1 bg-red-600 text-white rounded-lg text-xs hover:bg-red-700" onclick="changeStatus(<?= $article['id'] ?>, 'rejete')">Rejeter</button>
             </div>
+
+            <h2 class="text-xl font-bold mt-8 mb-4">Commentaires</h2>
+        <?php foreach ($commentaires as $commentaire): ?>
+            <div class="bg-white p-4 rounded shadow mb-4">
+                <p class="font-bold"><?php echo htmlspecialchars($commentaire['utilisateur']); ?></p>
+                <p><?php echo htmlspecialchars($commentaire['commentaire']); ?></p>
+                <p class="text-gray-600 text-sm"><?php echo htmlspecialchars($commentaire['date_commentaire']); ?></p>
+                <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?');">
+                    <input type="hidden" name="comment_id" value="<?php echo $commentaire['id']; ?>">
+                    <button type="submit" name="delete_comment" class="text-red-600 hover:text-red-900">Supprimer</button>
+                </form>
+            </div>
+        <?php endforeach; ?>
     </div>
     
         <div class="flex">
-            <a href="./home.php" class="mx-auto px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-blue-700">Retour à la page principale</a>
+            <a href="./dashboard.php" class="mx-auto px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-blue-700">Retour à la page principale</a>
         </div>
         <script>
-        function changeStatus(articleId, status) {
-        // AJAX request to change the status of the article
-        fetch('detailsarticle.php?id=<?= $articleId ?>', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: articleId, status: status }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Erreur lors du changement de statut');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    }
+        
         </script>
     </body>
     </html>

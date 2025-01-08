@@ -24,7 +24,7 @@ try {
    $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
    $offset = ($currentPage - 1) * $articlesPerPage;
    $articles = $admin->getArticles($pdo, $offset, $articlesPerPage);
-    
+   $tags = $pdo->query('SELECT * FROM tags')->fetchAll(PDO::FETCH_ASSOC);
     $categories = $admin->getCategories($pdo);
     $totalUsers = $admin->TotalUsers($pdo);
     $totalCategories = $admin->TotalCategories($pdo);
@@ -288,27 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <script>
-            function changeStatus(articleId, status) {
-                // AJAX request to change the status of the article
-                fetch('modifier_article_status.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ id: articleId, status: status }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Erreur lors du changement de statut');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-            }
+            
 
                 function changePage(direction) {
                     let currentPage = <?= $currentPage ?>;
@@ -374,6 +354,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <p>Aucune catégorie trouvée.</p>
                     <?php endif; ?>
             </div>
+            <div id="tags" class="bg-white rounded-lg shadow mt-10">
+            <div class="p-4 lg:p-6 border-b border-gray-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h3 class="text-lg font-medium">Gestion des Tags</h3>
+                    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <input type="text" placeholder="Rechercher..." class="px-4 py-2 border rounded-lg flex-grow sm:flex-grow-0">
+                        <button class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap" onclick="ouvrirModalTag()">
+                            <i class="fas fa-plus-circle mr-2"></i>
+                            Ajouter
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <?php if (!empty($tags)): ?>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                                <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                        <?php foreach ($tags as $tag): ?>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?= htmlspecialchars($tag['id']) ?></td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900"><?= htmlspecialchars($tag['nom']) ?></td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm space-x-3">
+                                    <button name="modifierTag" class="text-blue-600 hover:text-blue-900" onclick="ouvrirModalModifierTag(<?= $tag['id'] ?>, '<?= htmlspecialchars($tag['nom']) ?>')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <form action="./crudTag.php" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce tag ?');" style="display:inline;">
+                                        <input type="hidden" name="tag_id" value="<?= $tag['id'] ?>">
+                                        <button type="submit" name="supprimerTag" class="text-red-600 hover:text-red-900">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p>Aucun tag trouvé.</p>
+            <?php endif; ?>
+        </div>
         </div>
     </main>
             <!-- Modal pour Ajout d'une nv cat -->
@@ -421,6 +449,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
     </div>
+
+    <!-- Modal pour Ajout d'un nouveau tag -->
+    <div id="modalTag" class="fixed z-10 inset-0 overflow-y-auto hidden">
+            <div class="flex items-center justify-center min-h-screen">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-lg font-medium mb-4">Ajouter un nouveau tag</h2>
+                    <form action="./crudTag.php" method="POST">
+                        <div class="mb-4">
+                            <label for="nom" class="block text-sm font-medium text-gray-700">Nom</label>
+                            <input type="text" name="nom" id="nom" class="mt-1 block w-full px-3 py-2 border rounded-lg" required>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded mr-2" onclick="fermerModalTag()">Annuler</button>
+                            <button type="submit" name="creerTag" class="bg-blue-600 text-white px-4 py-2 rounded">Ajouter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Modal pour Modifier un tag -->
+        <div id="modalModifierTag" class="fixed z-10 inset-0 overflow-y-auto hidden">
+            <div class="flex items-center justify-center min-h-screen">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h2 class="text-lg font-medium mb-4">Modifier le tag</h2>
+                    <form action="./crudTag.php" method="POST">
+                        <input type="hidden" name="tag_id" id="modifierTagId">
+                        <div class="mb-4">
+                            <label for="modifierNom" class="block text-sm font-medium text-gray-700">Nom</label>
+                            <input type="text" name="nom" id="modifierNom" class="mt-1 block w-full px-3 py-2 border rounded-lg" required>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded mr-2" onclick="fermerModalModifierTag()">Annuler</button>
+                            <button type="submit" name="modifierTag" class="bg-blue-600 text-white px-4 py-2 rounded">Modifier</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
             <script>
                     function openModal() {
                         document.getElementById('modal').classList.remove('hidden');
@@ -506,6 +572,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             populateTable();
         });
     </script>
-    
+    <script src="../../assets/js/scriptadmin.js"></script>
 </body>
 </html>

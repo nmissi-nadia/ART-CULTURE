@@ -4,8 +4,8 @@ require_once ("../../config/db_connect.php");
 require_once ("../../classes/User.classe.php");
 require_once ("../../classes/Utilisateur.php");
 
-if (!isset($_SESSION['id_user']) || $_SESSION['role_id'] !== 3) {
-    header('Location: ../login.php');
+if (!isset($_SESSION['id_user']) && !isset($_SESSION['role_id'])!==3) {
+    header('Location: ./login.php'); 
     exit();
 }
 
@@ -35,7 +35,7 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
         $commentaire = htmlspecialchars(trim($_POST['commentaire']));
         if (!empty($commentaire)) {
-            $stmt = $pdo->prepare('INSERT INTO commentaires (article_id, utilisateur_id, commentaire, date_commentaire) VALUES (?, ?, ?, NOW())');
+            $stmt = $pdo->prepare('INSERT INTO commentaires (article_id, utilisateur_id, contenu, date_creation) VALUES (?, ?, ?, NOW())');
             $stmt->execute([$articleId, $_SESSION['id_user'], $commentaire]);
         }
     }
@@ -50,7 +50,7 @@ try {
     }
 
     // Récupérer les commentaires
-    $stmt = $pdo->prepare('SELECT c.*, u.nom AS utilisateur FROM commentaires c JOIN utilisateurs u ON c.utilisateur_id = u.id_user WHERE c.article_id = ? ORDER BY c.date_commentaire DESC');
+    $stmt = $pdo->prepare('SELECT c.*, u.nom AS utilisateur FROM commentaires c JOIN utilisateurs u ON c.utilisateur_id = u.id_user WHERE c.article_id = ? ORDER BY c.date_creation DESC');
     $stmt->execute([$articleId]);
     $commentaires = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -86,10 +86,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'download') {
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4"><?php echo htmlspecialchars($article['titre']); ?></h1>
-        <p class="mb-4"><?php echo htmlspecialchars($article['contenu']); ?></p>
-        <p class="mb-4">Auteur: <?php echo htmlspecialchars($article['auteur']); ?></p>
-        <p class="mb-4">Catégorie: <?php echo htmlspecialchars($article['categorie']); ?></p>
+    <h1 class="text-2xl font-bold mb-4"><?= htmlspecialchars($article['titre']) ?></h1>
+            <img src="<?= htmlspecialchars($article['image_couverture']) ?>" alt="<?= htmlspecialchars($article['titre']) ?>" class="w-full h-64 object-cover rounded-lg mb-4">
+            <p class="text-gray-600 mb-4"><?= htmlspecialchars($article['contenu']) ?></p>
+            <p class="text-sm text-gray-600 mb-4"><strong>Auteur:</strong> <?= htmlspecialchars($article['auteur']) ?></p>
+            <p class="text-sm text-gray-600 mb-4"><strong>Catégorie:</strong> <?= htmlspecialchars($article['categorie']) ?></p>
+            <p class="text-sm text-gray-600 mb-4"><strong>Date de création:</strong> <?= htmlspecialchars($article['date_creation']) ?></p>
+            <p class="text-sm text-gray-600 mb-4"><strong>Statut:</strong> <?= htmlspecialchars($article['status']) ?></p>
 
         <form method="POST" action="">
             <button type="submit" name="like" class="bg-blue-500 text-white px-4 py-2 rounded">Like</button>
