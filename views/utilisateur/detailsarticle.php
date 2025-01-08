@@ -58,17 +58,7 @@ try {
     die('Erreur : ' . $e->getMessage());
 }
 
-// Fonction pour générer le PDF
-function generatePDF($article) {
-    require_once '../../vendor/autoload.php';
-    $mpdf = new \Mpdf\Mpdf();
-    $html = "<h1>{$article['titre']}</h1>";
-    $html .= "<p>{$article['contenu']}</p>";
-    $html .= "<p>Auteur: {$article['auteur']}</p>";
-    $html .= "<p>Catégorie: {$article['categorie']}</p>";
-    $mpdf->WriteHTML($html);
-    $mpdf->Output();
-}
+
 
 if (isset($_GET['action']) && $_GET['action'] === 'download') {
     generatePDF($article);
@@ -83,6 +73,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'download') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Détails de l'article</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto p-4">
@@ -98,7 +90,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'download') {
             <button type="submit" name="like" class="bg-blue-500 text-white px-4 py-2 rounded">Like</button>
         </form>
 
-        <a href="?id=<?php echo $articleId; ?>&action=download" class="bg-green-500 text-white px-4 py-2 rounded">Télécharger en PDF</a>
+        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg mt-4" onclick="generatePDF()">Télécharger en PDF</button>
 
         <h2 class="text-xl font-bold mt-8 mb-4">Commentaires</h2>
         <form method="POST" action="">
@@ -114,5 +106,20 @@ if (isset($_GET['action']) && $_GET['action'] === 'download') {
             </div>
         <?php endforeach; ?>
     </div>
+    <script>
+                function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.text("<?php echo addslashes($article['titre']); ?>", 10, 10);
+            doc.addImage("<?php echo $article['image_couverture']; ?>", "JPEG", 10, 20, 180, 160);
+            doc.text("Auteur: <?php echo addslashes($article['auteur']); ?>", 10, 190);
+            doc.text("Catégorie: <?php echo addslashes($article['categorie']); ?>", 10, 200);
+            doc.text("Date de création: <?php echo addslashes($article['date_creation']); ?>", 10, 210);
+            doc.text("<?php echo addslashes($article['contenu']); ?>", 10, 220);
+
+            doc.save("article.pdf");
+        }
+    </script>
 </body>
 </html>
