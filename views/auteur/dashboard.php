@@ -1,7 +1,6 @@
 <?php
    require_once ("../../config/db_connect.php");
    require_once ("../../classes/User.classe.php");
-   require_once ("../../classes/Utilisateur.php");
    require_once ("../../classes/Auteur.php");
 session_start();
 
@@ -16,7 +15,7 @@ if (!isset($_SESSION['id_user']) && !isset($_SESSION['role_id'])!==2) {
 
 try {
     // Instancier l'auteur avec les données de la session
-    $auteur = new Auteur($_SESSION['nom'], $_SESSION['email'], '', $_SESSION['role_id']);
+    $auteur = new Auteur($_SESSION['nom'], $_SESSION['email'], '', $_SESSION['role_id'], $_SESSION['photo_profil']);
 
     // Récupérer les articles de l'auteur
     $page = intval($_GET['page'] ?? 1);

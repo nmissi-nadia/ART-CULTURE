@@ -2,6 +2,8 @@
 
 require_once '../config/db_connect.php';
 require_once '../classes/User.classe.php';
+require_once '../classes/Utilisateur.php';
+require_once '../classes/Auteur.php';
 require_once '../PHPMailer/src/Exception.php';
 require_once '../PHPMailer/src/PHPMailer.php';
 require_once '../PHPMailer/src/SMTP.php';
@@ -34,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscri'])) {
     }
 
     try {
-        $user = new Utilisateur($nom, $email, $motDePasse, $role_id);
+        $user = new Utilisateur($nom, $email, $motDePasse, $role_id, $photoProfil);
 
         if ($photoProfil && $photoProfil['error'] === UPLOAD_ERR_OK) {
             $photoPath = '../uploads/' . basename($photoProfil['name']);
@@ -56,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscri'])) {
                 $mail->Port = 587;
 
                 // Recipients
-                $mail->setFrom('nmissinadia@gmail.com', 'Art & Culture');
+                $mail->setFrom('ahmed.benkrara12@gmail.com', 'Art & Culture');
                 $mail->addAddress($email, $nom);
 
                 // Content
@@ -69,8 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscri'])) {
                 $mail->send();
 
                 echo 'Inscription réussie. Vous pouvez maintenant vous connecter.';
+                exit;
                 header("Location:./login.php");
-                exit; // Ensure the script stops executing after redirection
+                 // Ensure the script stops executing after redirection
             } catch (Exception $e) {
                 error_log('Erreur lors de l\'envoi de l\'email : ' . $mail->ErrorInfo);
                 die('Une erreur est survenue lors de l\'envoi de l\'email : ' . $mail->ErrorInfo);

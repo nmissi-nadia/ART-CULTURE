@@ -8,7 +8,9 @@
         header('Location: ./login.php'); 
         exit();
     }
-    $utilisateur = new Utilisateur($_SESSION['nom'], $_SESSION['email'], '', $_SESSION['role_id']);
+    $utilisateur = new Utilisateur($_SESSION['nom'], $_SESSION['email'], '', $_SESSION['role_id'], $_SESSION['photo_profil']);
+    $utilisateur->setIdUser($_SESSION['id_user']);
+    
     $query = "SELECT id, nom FROM categories";
     $stmt = $pdo->prepare($query);
     $stmt->execute();

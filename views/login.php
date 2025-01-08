@@ -2,6 +2,8 @@
 
 require_once ("../config/db_connect.php");
 require_once ("../classes/User.classe.php");
+require_once ("../classes/Utilisateur.php");
+require_once ("../classes/Auteur.php");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connct'])) {
 //   test 
@@ -20,22 +22,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connct'])) {
     }
 
     try {
-        $user = new User('', $email, $motDePasse, '');
-        if ($user->seConnecter($pdo, $email, $motDePasse)) {
-            $_SESSION['id_user'] = $user->getIdUser();
-            $_SESSION['nom'] = $user->getNom();
-            $_SESSION['email'] = $user->getEmail();
-            $_SESSION['role_id'] = $user->getRole();
-  
+        // Instancier un objet User
+        $user = new User('', $email, $motDePasse, '', '');
 
-            echo 'Connexion réussie. Redirection en cours...';
-            if ($_SESSION['role_id'] == 1) {
-                header('Refresh: 2; URL=./admin/dashboard.php');
-            } elseif ($_SESSION['role_id'] == 2) {
-                header('Refresh: 2; URL=./auteur/dashboard.php');
+        // Vérifier les informations de connexion
+        if ($user->seConnecter($pdo, $email, $motDePasse)) {
+            // Rediriger en fonction du rôle de l'utilisateur
+            if ($_SESSION['role'] == 2) {
+                header('Location: ./auteur/dashboard.php');
             } else {
-                header('Refresh: 2; URL=./utilisateur/dashboard.php');
+                header('Location: ./utilisateur/home.php');
             }
+            exit;
         } else {
             error_log('Email ou mot de passe incorrect.');
             die('Email ou mot de passe incorrect.');
@@ -45,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connct'])) {
         die('Une erreur est survenue. Veuillez réessayer plus tard.');
     }
 }
+
 
 ?>
 <!DOCTYPE html>

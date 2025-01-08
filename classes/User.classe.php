@@ -193,24 +193,43 @@ class User {
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
-            if ($user && password_verify($motDePasse, $user['mot_de_passe'])) {
-                $this->id_user = $user['id_user'];
-                $this->nom = $user['nom'];
-                $this->email = $user['email'];
-                $this->motDePasse = $user['mot_de_passe'];
-                $this->role = $user['role_id'];
-                
+            if ($user) {
+                if (password_verify($motDePasse, $user['mot_de_passe'])) {
+                    $this->setIdUser($user['id_user']);
+                    $this->setNom($user['nom']);
+                    $this->setEmail($user['email']);
+                    $this->setMotDePasse($user['mot_de_passe']);
+                    $this->setRole($user['role_id']);
+                    $this->setPhotoProfil($user['photo_profil'] ?? '');
+                    $this->setBio($user['bio'] ?? '');
+                    $this->setDateInscription(new DateTime($user['date_inscription']));
+                    $this->setDerniereConnexion(new DateTime($user['derniere_connexion']));
     
-                // Mettre à jour la dernière connexion
-                $stmt = $pdo->prepare('UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id_user = ?');
-                $stmt->execute([$this->id_user]);
+                    $_SESSION['id_user'] = $this->getIdUser();
+                    $_SESSION['nom'] = $this->getNom();
+                    $_SESSION['email'] = $this->getEmail();
+                    $_SESSION['role'] = $this->getRole();
+                    $_SESSION['photo_profil'] = $this->getPhotoProfil();
+                    $_SESSION['bio'] = $this->getBio();
+                    $_SESSION['date_inscription'] = $this->getDateInscription();
+                    $_SESSION['derniere_connexion'] = $this->getDerniereConnexion();
     
-                return true;
+                    // Mettre à jour la dernière connexion
+                    $stmt = $pdo->prepare('UPDATE utilisateurs SET derniere_connexion = NOW() WHERE id_user = ?');
+                    $stmt->execute([$this->id_user]);
+    
+                    return true;
+                } else {
+                    error_log('Mot de passe incorrect.');
+                    return false;
+                }
             } else {
+                error_log('Utilisateur non trouvé.');
                 return false;
             }
         } catch (Exception $e) {
-            throw new Exception('Erreur lors de la connexion: ' . $e->getMessage());
+            error_log('Erreur lors de la connexion: ' . $e->getMessage());
+            return false;
         }
     }
 
