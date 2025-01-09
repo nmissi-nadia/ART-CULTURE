@@ -75,6 +75,23 @@ class Utilisateur extends User {
             throw new Exception('Erreur lors de l\'inscription: ' . $e->getMessage());
         }
     }
+    public function Articlesfavoris(PDO $pdo, int $userId): array
+    {
+        try {
+            // Fetch favorite articles
+            $query = "SELECT a.*, u.nom AS auteur, c.nom AS categorie 
+                      FROM favoris f
+                      JOIN articles a ON f.article_id = a.id
+                      JOIN utilisateurs u ON a.auteur_id = u.id_user
+                      JOIN categories c ON a.categorie_id = c.id
+                      WHERE f.utilisateur_id = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([$userId]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la récupération des articles favoris: ' . $e->getMessage());
+        }
+    }
 }
 
 

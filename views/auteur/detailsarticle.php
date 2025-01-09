@@ -4,7 +4,7 @@ require_once ("../../config/db_connect.php");
 require_once ("../../classes/User.classe.php");
 require_once ("../../classes/Utilisateur.php");
 
-if (!isset($_SESSION['id_user']) && !isset($_SESSION['role_id'])!==3) {
+if (!isset($_SESSION['id_user']) && !isset($_SESSION['role_id'])!==2) {
     header('Location: ./login.php'); 
     exit();
 }
@@ -88,27 +88,24 @@ try {
 
         <button class="px-4 py-2 bg-blue-600 text-white rounded-lg mt-4" onclick="generatePDF()">Télécharger en PDF</button>
 
-        <h2 class="text-xl font-bold mt-8 mb-4">Commentaires</h2>
-        <form method="POST" action="">
-            <textarea name="commentaire" class="w-full px-3 py-2 border rounded mb-4" placeholder="Ajouter un commentaire"></textarea>
-            <button type="submit" name="comment" class="bg-blue-500 text-white px-4 py-2 rounded">Commenter</button>
-        </form>
+        
 
-        <?php foreach ($commentaires as $commentaire): ?>
-                <div class="bg-white p-4 rounded-lg shadow mb-4">
-                    <div class="flex items-center mb-2">
-                        <div class="flex-shrink-0">
-                            <img class="h-10 w-10 rounded-full" src="path/to/user/profile/image.jpg" alt="<?php echo htmlspecialchars($commentaire['utilisateur']); ?>">
+                <?php foreach ($commentaires as $commentaire): ?>
+                    <div class="bg-white p-4 rounded-lg shadow mb-4">
+                        <div class="flex items-center mb-2">
+                            <div class="flex-shrink-0">
+                                <img class="h-10 w-10 rounded-full" src="path/to/user/profile/image.jpg" alt="<?php echo htmlspecialchars($commentaire['utilisateur']); ?>">
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-bold text-gray-900"><?php echo htmlspecialchars($commentaire['utilisateur']); ?></p>
+                                <p class="text-xs text-gray-600"><?php echo htmlspecialchars($commentaire['date_creation']); ?></p>
+                            </div>
                         </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-bold text-gray-900"><?php echo htmlspecialchars($commentaire['utilisateur']); ?></p>
-                            <p class="text-xs text-gray-600"><?php echo htmlspecialchars($commentaire['date_creation']); ?></p>
-                        </div>
+                        <p class="text-gray-700"><?php echo htmlspecialchars($commentaire['contenu']); ?></p>
                     </div>
-                    <p class="text-gray-700"><?php echo htmlspecialchars($commentaire['contenu']); ?></p>
-                </div>
-        <?php endforeach; ?>
-        <a href="./home.php" class="block mb-0 mt-4 px-4 py-2 text-blue-700 bg-purple-500 rounded-lg">Home</a>
+                <?php endforeach; ?>
+
+                <a href="./dashboard.php" class="block mb-0 mt-4 px-4 py-2 text-blue-700 bg-purple-500 rounded-lg">Home</a>
     </div>
     <script>
                     function generatePDF() {

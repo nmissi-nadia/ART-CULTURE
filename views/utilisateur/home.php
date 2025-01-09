@@ -22,6 +22,12 @@
     $articles = $data['articles'];
     $totalArticles = $data['total'];
     $totalPages = ceil($totalArticles / $limit);
+    try {
+        // Fetch favorite articles
+        $favoriteArticles = $utilisateur->Articlesfavoris($pdo, $_SESSION['id_user']);
+    } catch (Exception $e) {
+        die('Erreur : ' . $e->getMessage());
+    }
     
 ?>
 <!DOCTYPE html>
@@ -199,6 +205,26 @@
                 </a>
             <?php endfor; ?>
         </div>
+        <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-4">Articles Favoris</h1>
+        <?php if (!empty($favoriteArticles)): ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <?php foreach ($favoriteArticles as $article): ?>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h2 class="text-xl font-bold mb-2"><?php echo htmlspecialchars($article['titre']); ?></h2>
+                        <img src="<?php echo htmlspecialchars($article['image_couverture']); ?>" alt="<?php echo htmlspecialchars($article['titre']); ?>" class="w-full h-48 object-cover rounded-lg mb-2">
+                        <p class="text-gray-600 mb-2"><?php echo htmlspecialchars($article['contenu']); ?></p>
+                        <p class="text-sm text-gray-600 mb-2"><strong>Auteur:</strong> <?php echo htmlspecialchars($article['auteur']); ?></p>
+                        <p class="text-sm text-gray-600 mb-2"><strong>Catégorie:</strong> <?php echo htmlspecialchars($article['categorie']); ?></p>
+                        <p class="text-sm text-gray-600 mb-2"><strong>Date de création:</strong> <?php echo htmlspecialchars($article['date_creation']); ?></p>
+                        <a href="detailsarticle.php?id=<?php echo $article['id']; ?>" class="text-blue-500 hover:underline">Voir les détails</a>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p>Aucun article favori trouvé.</p>
+        <?php endif; ?>
+    </div>
     </main>
     <footer class="bg-gradient-to-r from-purple-600 to-blue-500 text-white">
         <div class="max-w-7xl mx-auto py-12 px-4">
