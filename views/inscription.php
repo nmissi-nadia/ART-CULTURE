@@ -50,15 +50,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['inscri'])) {
             try {
                 // Server settings
                 $mail->isSMTP();
-                $mail->Host = 'smtp.gmail.com'; // Set the SMTP server to send through
+                $mail->Host = 'smtp.gmail.com'; 
                 $mail->SMTPAuth = true;
-                $mail->Username = 'ahmed.benkrara12@gmail.com'; // SMTP username
-                $mail->Password = 'cgidqganvckpgtch'; // SMTP password (use App Password if 2-Step Verification is enabled)
+                $mail->Username = ''; // SMTP username
+                $mail->Password = 'cgidqganvckpgtch';
                 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port = 587;
 
                 // Recipients
-                $mail->setFrom('ahmed.benkrara12@gmail.com', 'Art & Culture');
+                $mail->setFrom('', 'Art & Culture');
                 $mail->addAddress($email, $nom);
 
                 // Content

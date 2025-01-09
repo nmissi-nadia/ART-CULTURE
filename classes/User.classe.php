@@ -241,6 +241,33 @@ class User {
             throw new Exception('Erreur lors de la mise à jour du profil: ' . $e->getMessage());
         }
     }
+
+    public function Infos_User(PDO $pdo, int $id): ?array {
+        try {
+            $query = "SELECT * FROM utilisateurs WHERE id_user = :id";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (PDOException $e) {
+            error_log("Erreur lors de la récupération de l'utilisateur : " . $e->getMessage());
+            return null;
+        }
+    }
+    public function obtenirNombreArticlesPublies(PDO $pdo, int $idUtilisateur): int {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM articles WHERE auteur_id = ? AND status = 'publie'");
+        $stmt->execute([$idUtilisateur]);
+        return (int) $stmt->fetchColumn();
+    }
+    public function obtenirTagsPourArticle(PDO $pdo, int $idArticle): array {
+        try {
+            $stmt = $pdo->prepare("SELECT t.nom FROM tags t INNER JOIN article_tags at ON t.id = at.tag_id WHERE at.article_id = ?");
+            $stmt->execute([$idArticle]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            throw new Exception('Erreur lors de la récupération des tags: ' . $e->getMessage());
+        }
+    }
 }
 
 

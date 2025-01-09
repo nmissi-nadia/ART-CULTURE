@@ -48,11 +48,36 @@ class Auteur extends Utilisateur {
         }
     }
 
-    public function creerArticle(PDO $pdo, string $titre, string $contenu, string $image_couverture, int $categorie_id): bool {
+    public function creerArticle(PDO $pdo, string $titre, string $contenu, string $image_couverture, int $categorie_id, array $tags): bool {
         try {
+            // Begin transaction
+            $pdo->beginTransaction();
+    
+            // Insert article
             $stmt = $pdo->prepare('INSERT INTO articles (titre, contenu, image_couverture, auteur_id, categorie_id, date_creation, date_modification) VALUES (?, ?, ?, ?, ?, NOW(), NOW())');
-            return $stmt->execute([$titre, $contenu, $image_couverture, $this->getIdUser(), $categorie_id]);
+            $stmt->execute([$titre, $contenu, $image_couverture, $this->getIdUser(), $categorie_id]);
+            $articleId = $pdo->lastInsertId();
+    
+            // Insert tags and associate them with the article
+            foreach ($tags as $tag) {
+                // Check if the tag already exists
+                $stmt = $pdo->prepare('SELECT id FROM tags WHERE nom = ?');
+                $stmt->execute([$tag]);
+                $tagId = $stmt->fetchColumn();
+    
+                // If the tag does not exist, insert it
+                if (!$tagId) {
+                    $stmt = $pdo->prepare('INSERT INTO tags (nom) VALUES (?)');
+                    $stmt->execute([$tag]);
+                    $tagId = $pdo->lastInsertId();
+                }
+                $stmt = $pdo->prepare('INSERT INTO tags_articles (article_id, tag_id) VALUES (?, ?)');
+                $stmt->execute([$articleId, $tagId]);
+            }
+            $pdo->commit();
+            return true;
         } catch (Exception $e) {
+            $pdo->rollBack();
             throw new Exception('Erreur lors de la publication de l\'article: ' . $e->getMessage());
         }
     }

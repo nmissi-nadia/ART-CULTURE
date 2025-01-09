@@ -10,10 +10,14 @@ if (!isset($_SESSION['id_user'])) {
 
 $id = $_SESSION['id_user']; 
 $admin = new User($_SESSION['nom'], $_SESSION['email'], $_SESSION['role_id'], $id);
-
+$admin->setIdUser($_SESSION['id_user']);
 $user = $admin->Infos_User($pdo, $id);
 if (!$user) {
     die("Utilisateur introuvable.");
+}
+$nombreArticlesPublies = 0;
+if ($user['role_id'] == 2) {
+    $nombreArticlesPublies = $admin->obtenirNombreArticlesPublies($pdo, $user['id_user']);
 }
 $message= '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -37,18 +41,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Mettre à jour les informations
-    $data = [
-        'nom' => $nom,
-        'email' => $email,
-        'bio' => $bio,
-        'photo_profil' => $photo_profil,
-    ];
+    $admin->setNom($nom);
+    $admin->setEmail($email);
+    $admin->setBio($bio);
+    $admin->setPhotoProfil($photo_profil);
 
-    if ($admin->updateUser($pdo, $id, $data)) {
-        $message = "Profil mis à jour avec succès.";
-        $user = $admin->getUserById($pdo, $id); // Recharger les informations
-    } else {
-        $message = "Erreur lors de la mise à jour du profil.";
+    try {
+        $admin->mettreAJourProfil($pdo);
+        $message = 'Profil mis à jour avec succès!';
+        $user = $admin->Infos_User($pdo, $id); // Refresh user data
+    } catch (Exception $e) {
+        $message = 'Erreur: ' . $e->getMessage();
     }
 }
 ?>
@@ -69,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
             <div class="flex flex-col md:flex-row items-center">
                 <div class="relative">
-                    <img id="profileImage" src="<?= htmlspecialchars($user['photo_profil']) ?>" alt="Photo de profil" 
+                    <img id="profileImage" src="<?= $user['photo_profil'] ?>" alt="Photo de profil" 
                          class="w-32 h-32 rounded-full object-cover border-4 border-purple-500">
                     <button id="editPhotoBtn" class="absolute bottom-0 right-0 bg-purple-500 text-white p-2 rounded-full hover:bg-purple-600">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h1 id="userName" class="text-2xl font-bold text-gray-800"><?= htmlspecialchars($user['nom']) ?></h1>
                     <p id="userEmail" class="text-gray-600"><?= htmlspecialchars($user['email']) ?></p>
                     <p id="userStatus" class="mt-2">
-                        <span class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"><?= htmlspecialchars($user['status']) ?></span>
+                        <span class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"><?= $user['status'] ?></span>
                     </p>
                 </div>
                 <button id="editProfileBtn" type="button" class="ml-auto bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600">
@@ -95,9 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Bio -->
             <div class="md:col-span-2 bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold mb-4">Biographie</h2>
-                <p id="userBio" class="text-gray-700"><?= $user['bio'] ?></p>
+                <p id="userBio" class="text-gray-700"><?php echo htmlspecialchars($user['bio']); ?></p>
             </div>
-
             <!-- Statistiques -->
             <div class="bg-white rounded-lg shadow-lg p-6">
                 <h2 class="text-xl font-semibold mb-4">Statistiques</h2>
@@ -110,40 +112,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span class="text-gray-600">Dernière connexion</span>
                         <span id="lastLogin" class="font-medium"><?= $user['derniere_connexion'] ?></span>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Articles publiés</span>
-                        <span id="articleCount" class="font-medium">0</span>
-                    </div>
+                    <?php if ($user['role_id'] == 2): ?>
+                <div class="flex justify-between items-center mt-4">
+                    <span class="text-gray-600">Articles publiés</span>
+                    <span id="nombreArticlesPublies" class="font-medium"><?php echo $nombreArticlesPublies; ?></span>
+                </div>
+            <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
+    <div class="flex justify-center mt-8">
+            <button id="homeBtn" class="bg-purple-500 text-white px-4 py-2 rounded">Retour à l'accueil</button>
+        </div>
 
     <!-- Modal de modification -->
     <div id="editModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
                 <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Modifier le profil</h3>
-                <form id="editForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nom</label>
-                        <input type="text" id="editName" class="mt-1 p-2 w-full border rounded-md">
+                <form id="editForm" action="" method="POST" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="editName" class="block text-gray-700">Nom</label>
+                        <input type="text" name="nom" id="editName" class="w-full px-3 py-2 border rounded" required>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="editEmail" class="mt-1 p-2 w-full border rounded-md">
+                    <div class="mb-4">
+                        <label for="editEmail" class="block text-gray-700">Email</label>
+                        <input type="email" name="email" id="editEmail" class="w-full px-3 py-2 border rounded" required>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Bio</label>
-                        <textarea id="editBio" class="mt-1 p-2 w-full border rounded-md" rows="4"></textarea>
+                    <div class="mb-4">
+                        <label for="editBio" class="block text-gray-700">Biographie</label>
+                        <textarea name="bio" id="editBio" class="w-full px-3 py-2 border rounded" required></textarea>
                     </div>
-                    <div class="flex justify-end space-x-2">
-                        <button type="button" id="cancelEdit" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
-                            Annuler
-                        </button>
-                        <button type="submit" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
-                            Enregistrer
-                        </button>
+                    <div class="mb-4">
+                        <label for="editPhoto" class="block text-gray-700">Photo de profil</label>
+                        <input type="file" name="photo_profil" id="editPhoto" class="w-full px-3 py-2 border rounded">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="button" id="cancelEdit" class="bg-gray-500 text-white px-4 py-2 rounded mr-2">Annuler</button>
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Enregistrer</button>
                     </div>
                 </form>
             </div>
@@ -151,10 +158,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-    
-
-       // Données de l'utilisateur
-       const userData = {
+    // Données de l'utilisateur
+    const userData = {
             nom: "<?= htmlspecialchars($user['nom']) ?>",
             email: "<?= htmlspecialchars($user['email']) ?>",
             bio: "<?= htmlspecialchars($user['bio']) ?>"
@@ -179,39 +184,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             document.getElementById('cancelEdit').addEventListener('click', () => {
                 editModal.classList.add('hidden');
             });
-
-            editForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const formData = new FormData(editForm);
-                fetch('update_user.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        
-                        userData.nom = document.getElementById('editName').value;
-                        userData.email = document.getElementById('editEmail').value;
-                        userData.bio = document.getElementById('editBio').value;
-
-                        document.getElementById('userName').textContent = userData.nom;
-                        document.getElementById('userEmail').textContent = userData.email;
-                        document.getElementById('userBio').textContent = userData.bio;
-
-editModal.classList.add('hidden');
-} else {
-alert('Erreur lors de la mise à jour du profil');
-}
-})
-.catch(error => {
-console.error('Error:', error);
-});
-});
-
-// Simuler le changement de photo
-document.getElementById('editPhotoBtn').addEventListener('click', () => {
-    alert('Fonctionnalité de changement de photo à implémenter');
+            document.getElementById('homeBtn').addEventListener('click', () => {
+                if (userData.id_user === 1) {
+                    window.location.href = './admin/dashboard.php'; // Change 'admin_home.php' to the actual admin home page URL
+                } else if (userData.id_user === 2) {
+                    window.location.href = './auteur/dashboard.php'; // Change 'index.php' to the actual home page URL
+                }else (userData.id_user === 3){
+                    window.location.href = './utilisateur/home.php'; // Change 'index.php' to the actual home page URL
+                }
             });
         }
     </script>

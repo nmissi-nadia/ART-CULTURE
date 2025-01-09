@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['connct'])) {
 
         // Vérifier les informations de connexion
         if ($user->seConnecter($pdo, $email, $motDePasse)) {
-            // Rediriger en fonction du rôle de l'utilisateur
+           
             if($_SESSION['role_id']==1){
                 header('Refresh: 2; URL=./admin/dashboard.php');
             }elseif ($_SESSION['role_id']==2) {

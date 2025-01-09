@@ -19,12 +19,15 @@
        $auteur = new Auteur($_SESSION['nom'], $_SESSION['email'], '', $_SESSION['role_id'], $_SESSION['photo_profil']);
        $auteur->setIdUser($_SESSION['id_user']);
        $categories = $pdo->query("SELECT id, nom FROM categories")->fetchAll(PDO::FETCH_ASSOC);
+       $stmt = $pdo->query('SELECT id, nom FROM tags');
+        $existingTags = $stmt->fetchAll(PDO::FETCH_ASSOC);
    
        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            $titre = htmlspecialchars(trim($_POST['title'] ?? ''));
            $contenu = htmlspecialchars(trim($_POST['contenu'] ?? ''));
            $categorie_id = intval($_POST['categorie_id'] ?? 0);
            $image_couverture = '';
+           $tags = isset($_POST['tags']) ? $_POST['tags'] : [];
    
            if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
                $uploadDir = '../uploads/';
@@ -38,7 +41,7 @@
            }
    
            try {
-               if ($auteur->creerArticle($pdo, $titre, $contenu, $image_couverture, $categorie_id)) {
+               if ($auteur->creerArticle($pdo, $titre, $contenu, $image_couverture, $categorie_id,$tags)) {
                    $message = 'Article créé avec succès.';
                } else {
                    $message = 'Erreur lors de la création de l\'article.';
@@ -60,15 +63,15 @@
        <title>Créer un Article</title>
        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
    </head>
-   <body class="bg-gray-100">
+   <body class="bg-purple-100">
        <div class="container mx-auto p-4">
            <h1 class="text-2xl font-bold mb-4">Créer un Article</h1>
    
            <?php if ($message): ?>
-               <div class="bg-<?php echo strpos($message, 'Erreur') === false ? 'green' : 'red'; ?>-500 text-white p-2 rounded mb-4">
-                   <?php echo $message; ?>
-               </div>
-           <?php endif; ?>
+                <script>
+                    alert("<?php echo addslashes($message); ?>");
+                </script>
+            <?php endif; ?>
    
            <form method="POST" action="" enctype="multipart/form-data" class="bg-white p-6 rounded shadow-md">
                <div class="mb-4">
@@ -88,11 +91,25 @@
                    </select>
                </div>
                <div class="mb-4">
+                <label for="tags" class="block text-gray-700">Tags</label>
+                <div class="flex flex-wrap">
+                    <?php foreach ($existingTags as $tag): ?>
+                        <div class="mr-4 mb-2">
+                            <input type="checkbox" name="tags[]" id="tag_<?php echo $tag['id']; ?>" value="<?php echo $tag['id']; ?>" class="mr-2">
+                            <label for="tag_<?php echo $tag['id']; ?>" class="text-gray-700"><?php echo htmlspecialchars($tag['nom']); ?></label>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+               <div class="mb-4">
                    <label for="cover_image" class="block text-gray-700">Image de couverture</label>
                    <input type="file" name="cover_image" id="cover_image" class="w-full px-3 py-2 border rounded">
                </div>
+               <div class="flex justify-start items-center">
+                   <a href="./dashboard.php" class="bg-purple-500 text-white px-4 py-2 rounded">Annuler</a>
+               </div>
                <div class="flex justify-end">
-                   <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Créer</button>
+                   <button type="submit" class="bg-purple-500 text-white px-4 py-2 rounded">Créer</button>
                </div>
            </form>
        </div>

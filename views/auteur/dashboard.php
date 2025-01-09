@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $contenu = htmlspecialchars(trim($_POST['contenu']));
         $image_couverture = htmlspecialchars(trim($_POST['image_couverture']));
         $categorie_id = intval($_POST['categorie_id']);
-        $tags = []; // Assuming tags are handled elsewhere
+        $tags = [];
         try {
             $auteur->modifierArticle($pdo, $article_id, $titre, $contenu, $categorie_id, $tags, $image_couverture);
             echo 'Article modifié avec succès.';
@@ -53,12 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             die('Erreur lors de la suppression de l\'article : ' . $e->getMessage());
         }
     }
-    try {
-        // Fetch favorite articles
-        $favoriteArticles = $utilisateur->Articlesfavoris($pdo, $userId);
-    } catch (Exception $e) {
-        die('Erreur : ' . $e->getMessage());
-    }
+    
 }
 ?>
 <!DOCTYPE html>
@@ -214,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <?= htmlspecialchars(substr($article['excerpt'], 0, 100)) ?>...
                             </p>
                         </div>
-                        <a href="./detailsarticle.php?id=' . $article['id'] . '" class="block mb-0 mt-4 px-4 py-2 text-blue-700">Lire la suite ...</a>
+                        <a href="./detailsarticle.php?id='<?=  $article['id'] ?>'" class="block mb-0 mt-4 px-4 py-2 text-blue-700">Lire la suite ...</a>
                     </article>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -233,26 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </main>
 
-    <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold mb-4">Articles Favoris</h1>
-        <?php if (!empty($favoriteArticles)): ?>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <?php foreach ($favoriteArticles as $article): ?>
-                    <div class="bg-white p-4 rounded-lg shadow">
-                        <h2 class="text-xl font-bold mb-2"><?php echo htmlspecialchars($article['titre']); ?></h2>
-                        <img src="<?php echo htmlspecialchars($article['image_couverture']); ?>" alt="<?php echo htmlspecialchars($article['titre']); ?>" class="w-full h-48 object-cover rounded-lg mb-2">
-                        <p class="text-gray-600 mb-2"><?php echo htmlspecialchars($article['contenu']); ?></p>
-                        <p class="text-sm text-gray-600 mb-2"><strong>Auteur:</strong> <?php echo htmlspecialchars($article['auteur']); ?></p>
-                        <p class="text-sm text-gray-600 mb-2"><strong>Catégorie:</strong> <?php echo htmlspecialchars($article['categorie']); ?></p>
-                        <p class="text-sm text-gray-600 mb-2"><strong>Date de création:</strong> <?php echo htmlspecialchars($article['date_creation']); ?></p>
-                        <a href="detailsarticle.php?id=<?php echo $article['id']; ?>" class="text-blue-500 hover:underline">Voir les détails</a>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <p>Aucun article favori trouvé.</p>
-        <?php endif; ?>
-    </div>
+
 
 <!-- Modal for editing articles -->
 <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center" style="display:none;">

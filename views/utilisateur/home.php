@@ -189,6 +189,19 @@
                 echo '<p class="text-gray-700 mb-4">' . htmlspecialchars(substr($article['contenu'], 0, 100)) . '...</p>';
                 echo '<p class="text-sm text-gray-600">Catégorie: ' . htmlspecialchars($article['categorie']) . '</p>';
                 echo '<p class="text-sm text-gray-600">Date: ' . htmlspecialchars($article['date_creation']) . '</p>';
+                try {
+                    $tags = $utilisateur->obtenirTagsPourArticle($pdo, $article['id']);
+                    if (!empty($tags)) {
+                        echo '<p class="text-sm text-gray-600">Tags: ';
+                        foreach ($tags as $tag) {
+                            echo '<span class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2">' . htmlspecialchars($tag['nom']) . '</span>';
+                        }
+                        echo '</p>';
+                    }
+                } catch (Exception $e) {
+                    echo '<p class="text-sm text-red-600">Erreur lors de la récupération des tags: ' . htmlspecialchars($e->getMessage()) . '</p>';
+                }
+            
                 echo '<a href="./detailsarticle.php?id=' . $article['id'] . '" class="block mb-0 mt-4 px-4 py-2 text-blue-700">Lire la suite ...</a>';
                 echo '</div>';
             }
